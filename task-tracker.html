@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบติดตามงาน - Task Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Noto Sans Thai',sans-serif;background:#F1F5F9;color:#1E293B;min-height:100vh;}
+  button,input,select,textarea{font-family:inherit;}
+  button{cursor:pointer;}
+
+  /* Header */
+  .header{background:linear-gradient(135deg,#1E3A5F 0%,#2563EB 100%);padding:0;color:#fff;}
+  .header-top{display:flex;justify-content:space-between;align-items:center;padding:18px 32px;max-width:1500px;margin:0 auto;flex-wrap:wrap;gap:10px;}
+  .header h1{font-size:22px;font-weight:700;}
+  .header p{opacity:.75;font-size:12px;margin-top:2px;}
+  .header-btns{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+  /* Tabs */
+  .tab-bar{display:flex;gap:0;padding:0 32px;max-width:1500px;margin:0 auto;}
+  .tab-btn{padding:10px 22px;border:none;background:transparent;color:rgba(255,255,255,.65);font-size:13px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;}
+  .tab-btn:hover{color:#fff;}
+  .tab-btn.active{color:#fff;border-bottom:3px solid #fff;}
+
+  /* Buttons */
+  .btn{border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:500;transition:all .15s;}
+  .btn-ghost{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;}
+  .btn-ghost:hover{background:rgba(255,255,255,.25);}
+  .btn-green{background:#10B981;color:#fff;font-weight:600;}
+  .btn-green:hover{background:#059669;}
+  .btn-blue{background:#2563EB;color:#fff;}
+  .btn-blue:hover{background:#1D4ED8;}
+  .btn-red{background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;}
+  .btn-gray{background:#E2E8F0;color:#475569;}
+  .btn-yellow{background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;}
+
+  /* Layout */
+  .container{padding:20px 32px;max-width:1500px;margin:0 auto;}
+  .card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid #E2E8F0;overflow:hidden;}
+
+  /* Settings panel */
+  .panel{padding:20px;margin-bottom:14px;}
+  .panel h3{font-size:14px;font-weight:600;margin-bottom:10px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .tags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;min-height:32px;}
+  .tag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;}
+  .tag-close{background:none;border:none;font-size:14px;line-height:1;padding:0;opacity:.6;}
+  .tag-close:hover{opacity:1;}
+  .tag-edit{background:none;border:none;font-size:11px;padding:0;opacity:.6;cursor:pointer;}
+  .tag-edit:hover{opacity:1;}
+  .input-row{display:flex;gap:7px;}
+  .input-row input{flex:1;padding:7px 10px;border:1px solid #CBD5E1;border-radius:8px;font-size:12px;}
+
+  /* Member edit inline */
+  .member-edit-row{display:flex;align-items:center;gap:5px;background:#EFF6FF;padding:4px 8px;border-radius:8px;border:1px solid #BFDBFE;}
+  .member-edit-row input{flex:1;padding:3px 7px;border:1px solid #93C5FD;border-radius:5px;font-size:12px;}
+
+  /* Avatar */
+  .avatar{width:26px;height:26px;border-radius:50%;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;}
+  .av-sm{width:20px;height:20px;font-size:9px;}
+  .av-lg{width:32px;height:32px;font-size:14px;}
+
+  /* Form */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+  .form-grid .full{grid-column:1/3;}
+  .form-label{font-size:11px;color:#64748B;display:block;margin-bottom:3px;font-weight:500;}
+  .form-input{width:100%;padding:7px 10px;border:1px solid #CBD5E1;border-radius:8px;font-size:12px;}
+  .form-input:disabled{opacity:.4;}
+  .form-textarea{resize:vertical;min-height:40px;}
+  .checkbox-lbl{margin-left:8px;font-size:11px;}
+
+  /* Filter bar */
+  .filter-bar{padding:10px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .filter-bar .lbl{font-size:13px;font-weight:600;color:#475569;}
+  .filter-bar select{padding:4px 8px;border:1px solid #CBD5E1;border-radius:7px;font-size:12px;background:#fff;}
+  .filter-bar .count{font-size:11px;color:#94A3B8;margin-left:auto;}
+
+  /* Summary strip */
+  .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+  .sum-card{background:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+  .sum-card .num{font-size:24px;font-weight:700;}
+  .sum-card .lbl{font-size:11px;color:#64748B;}
+
+  /* Main grid */
+  .main-grid{display:grid;gap:18px;}
+  .main-grid.with-d{grid-template-columns:1fr 390px;}
+  .main-grid.no-d{grid-template-columns:1fr;}
+
+  /* Gantt */
+  .gantt-hdr{padding:12px 18px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+  .gantt-hdr h2{font-size:15px;font-weight:600;}
+  .time-sel{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+  .time-grp{display:flex;align-items:center;gap:4px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:3px 8px;}
+  .time-grp span{font-size:11px;color:#94A3B8;font-weight:500;}
+  .time-grp select{padding:3px 4px;border:1px solid #CBD5E1;border-radius:5px;font-size:11px;background:#fff;}
+  .nav-btn{background:#F1F5F9;border:1px solid #E2E8F0;border-radius:7px;width:30px;height:30px;font-size:13px;display:flex;align-items:center;justify-content:center;color:#475569;}
+  .nav-btn:hover{background:#E2E8F0;}
+  .arr-sep{font-size:14px;color:#94A3B8;}
+
+  /* Pagination row */
+  .gantt-pg{display:flex;align-items:center;gap:6px;padding:8px 18px;border-top:1px solid #F1F5F9;background:#FAFBFC;}
+  .gantt-pg span{font-size:12px;color:#64748B;}
+  .pg-btn{padding:4px 10px;border-radius:6px;border:1px solid #CBD5E1;background:#fff;font-size:11px;color:#475569;}
+  .pg-btn.active{background:#2563EB;color:#fff;border-color:#2563EB;}
+  .pg-nav{padding:4px 8px;border-radius:6px;border:1px solid #CBD5E1;background:#fff;font-size:11px;color:#475569;}
+  .pg-nav:disabled{opacity:.4;}
+
+  .gantt-scroll{overflow-x:auto;}
+  .g-month-row,.g-day-row,.g-task-row{display:flex;}
+  .g-month-row{border-bottom:1px solid #E2E8F0;}
+  .g-day-row{border-bottom:1px solid #E2E8F0;}
+  .g-task-row{border-bottom:1px solid #F1F5F9;cursor:pointer;transition:background .1s;}
+  .g-task-row:hover{background:#F8FAFC;}
+  .g-task-row.sel{background:#EFF6FF;}
+  .g-name-col{width:300px;min-width:300px;padding:9px 14px;display:flex;align-items:center;gap:9px;}
+  .g-name-hdr{width:300px;min-width:300px;background:#F8FAFC;padding:7px 14px;font-size:11px;font-weight:600;color:#64748B;display:flex;align-items:center;}
+  .g-bar-area{flex:1;position:relative;height:48px;}
+  .g-bar{position:absolute;top:12px;height:24px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.12);display:flex;align-items:center;padding-left:8px;font-size:10px;color:#fff;font-weight:500;overflow:hidden;white-space:nowrap;}
+  .g-bar.no-dl{border-radius:6px 0 0 6px;}
+  .today-ln{position:absolute;top:0;bottom:0;width:2px;background:#EF4444;z-index:2;opacity:.55;}
+  .grid-ln{position:absolute;top:0;bottom:0;width:1px;background:#F1F5F9;}
+  .month-cell{background:#F8FAFC;text-align:center;font-size:11px;font-weight:600;color:#475569;padding:7px 0;white-space:nowrap;overflow:hidden;}
+  .day-cell{text-align:center;font-size:9px;padding:3px 0;}
+  .day-we{color:#CBD5E1;background:#FAFBFC;}
+  .day-td{color:#EF4444;font-weight:700;background:#FEF2F2;}
+  .task-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .task-info{flex:1;min-width:0;}
+  .task-nm{font-size:12px;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .task-dt{font-size:10px;color:#94A3B8;}
+
+  /* Detail panel */
+  .dp{max-height:calc(100vh - 180px);overflow-y:auto;}
+  .dp-hdr{padding:12px 18px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1;}
+  .dp-body{padding:18px;}
+  .dp-title{font-size:15px;font-weight:600;margin-bottom:4px;}
+  .dp-desc{font-size:11px;color:#64748B;margin-bottom:12px;line-height:1.5;}
+  .dp-assignee{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#F8FAFC;border-radius:8px;margin-bottom:12px;}
+  .dp-dates{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
+  .dp-date-box{background:#F8FAFC;padding:7px 10px;border-radius:8px;}
+  .dp-date-box .lbl{font-size:10px;color:#94A3B8;}
+  .dp-date-box .val{font-size:11px;font-weight:500;}
+  .s-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+
+  .upd-form{background:#F0F9FF;border:1px solid #BAE6FD;border-radius:10px;padding:12px;margin-bottom:12px;}
+  .upd-form .ttl{font-size:12px;font-weight:600;margin-bottom:7px;}
+  .upd-btns{display:flex;gap:7px;margin-top:7px;}
+  .upd-btns button{flex:1;padding:6px;border-radius:7px;border:none;font-size:11px;}
+
+  .hist-tog{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid #F1F5F9;cursor:pointer;user-select:none;}
+  .hist-tog span:first-child{font-size:12px;font-weight:600;}
+  .hist-arr{font-size:15px;color:#94A3B8;transition:transform .2s;}
+  .hist-arr.open{transform:rotate(180deg);}
+  .timeline{border-left:2px solid #E2E8F0;margin-left:8px;padding-left:14px;}
+  .tl-item{margin-bottom:10px;position:relative;}
+  .tl-dot{position:absolute;left:-21px;top:4px;width:10px;height:10px;border-radius:50%;border:2px solid #fff;}
+  .tl-date{font-size:10px;color:#94A3B8;}
+  .tl-note{font-size:11px;color:#475569;margin-top:2px;line-height:1.4;}
+
+  .empty-state{text-align:center;padding:36px 20px;color:#94A3B8;}
+  .empty-state .icon{font-size:38px;margin-bottom:7px;}
+
+  /* Report tab */
+  .report-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+  .rep-card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid #E2E8F0;}
+  .rep-card .head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .rep-card .name{font-size:14px;font-weight:600;}
+  .rep-bars{display:flex;flex-direction:column;gap:8px;}
+  .rep-row{display:flex;align-items:center;gap:8px;}
+  .rep-row .lbl{font-size:11px;color:#64748B;width:130px;flex-shrink:0;}
+  .rep-row .bar-track{flex:1;background:#F1F5F9;border-radius:99px;height:7px;overflow:hidden;}
+  .rep-row .bar-fill{height:100%;border-radius:99px;}
+  .rep-row .cnt{font-size:11px;font-weight:600;min-width:24px;text-align:right;}
+  .rep-total{font-size:11px;color:#94A3B8;margin-top:10px;padding-top:8px;border-top:1px solid #F1F5F9;}
+
+  /* Modal overlay */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:center;justify-content:center;}
+  .modal{background:#fff;border-radius:14px;padding:28px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,.18);}
+  .modal h3{font-size:16px;font-weight:600;margin-bottom:8px;}
+  .modal p{font-size:13px;color:#64748B;margin-bottom:14px;}
+  .modal input{width:100%;padding:9px 12px;border:1px solid #CBD5E1;border-radius:8px;font-size:14px;margin-bottom:12px;letter-spacing:2px;}
+  .modal-btns{display:flex;gap:8px;}
+  .modal-btns button{flex:1;padding:9px;border-radius:8px;border:none;font-size:13px;}
+
+  @media(max-width:1024px){
+    .main-grid.with-d{grid-template-columns:1fr;}
+    .grid-2{grid-template-columns:1fr;}
+  }
+  @media(max-width:768px){
+    .container{padding:12px 14px;}
+    .header-top,.tab-bar{padding:14px;}
+    .summary{grid-template-columns:1fr;}
+    .form-grid{grid-template-columns:1fr;}
+    .form-grid .full{grid-column:1;}
+    .g-name-col,.g-name-hdr{width:180px;min-width:180px;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useRef} = React;
+
+const RESET_PIN = "0867291841";
+const STORAGE_KEY = "task_tracker_v2";
+const INIT_STATUSES = ["อยู่ระหว่างดำเนินการ","ดำเนินการเสร็จสิ้น"];
+const AVATAR_COLORS = ["#3B82F6","#EF4444","#10B981","#F59E0B","#8B5CF6","#EC4899","#06B6D4","#F97316"];
+const STATUS_COLORS = {
+  "อยู่ระหว่างดำเนินการ":{bg:"#3B82F6",light:"#DBEAFE",text:"#1E40AF"},
+  "ดำเนินการเสร็จสิ้น":{bg:"#10B981",light:"#D1FAE5",text:"#065F46"},
+};
+const DEFAULT_SC = {bg:"#8B5CF6",light:"#EDE9FE",text:"#5B21B6"};
+const MONTH_S = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const MONTH_L = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const PAGE_OPTS = [10,20,50,100,"Max"];
+
+function sc(s){return STATUS_COLORS[s]||DEFAULT_SC;}
+function av(n){if(!n)return AVATAR_COLORS[0];let h=0;for(let i=0;i<n.length;i++)h=n.charCodeAt(i)+((h<<5)-h);return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length];}
+function fmt(d){if(!d)return"-";return new Date(d).toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});}
+function today(){return new Date().toISOString().slice(0,10);}
+
+function load(){try{const r=localStorage.getItem(STORAGE_KEY);return r?JSON.parse(r):null;}catch{return null;}}
+
+function App(){
+  const saved = load();
+  // Migrate old single-assignee tasks to assignees array
+  const migTasks = (saved?.tasks??[]).map(({assignee,...t})=>({...t,assignees:t.assignees??(assignee?[assignee]:[])}));
+  const [tasks,setTasks]       = useState(migTasks);
+  const [statuses,setStatuses] = useState(saved?.statuses ?? INIT_STATUSES);
+  const [members,setMembers]   = useState(saved?.members  ?? []);
+  const [tab,setTab]           = useState("gantt");
+  const [selTask,setSelTask]   = useState(null);
+  const [expHist,setExpHist]   = useState({});
+  const [showAdd,setShowAdd]   = useState(false);
+  const [showCfg,setShowCfg]   = useState(false);
+  const [showUpd,setShowUpd]   = useState(false);
+  const [editTask,setEditTask] = useState(null);
+  const [saveLabel,setSaveLabel] = useState("");
+  const [pageSize,setPageSize] = useState(10);
+  const [pageNum,setPageNum]   = useState(1);
+  // Filters
+  const [fA,setFA] = useState("ทั้งหมด");
+  const [fS,setFS] = useState("ทั้งหมด");
+  // Time range
+  const now = new Date();
+  const [fm,setFm] = useState(now.getMonth());
+  const [fy,setFy] = useState(now.getFullYear());
+  const [tm,setTm] = useState(Math.min(now.getMonth()+1,11));
+  const [ty,setTy] = useState(now.getFullYear());
+  // New task
+  const emptyT = {name:"",description:"",assignees:[],startDate:"",endDate:"",hasDeadline:true,status:statuses[0]||""};
+  const [nT,setNT]   = useState(emptyT);
+  const [updF,setUpdF] = useState({status:"",note:""});
+  const [nSt,setNSt] = useState("");
+  const [nMb,setNMb] = useState("");
+  const [editMb,setEditMb]         = useState(null); // {old, val}
+  const [editSt,setEditSt]         = useState(null); // {old, val}
+  const [stPinModal,setStPinModal] = useState(null); // {action:"edit", target:string}
+  const [stPinVal,setStPinVal]     = useState("");
+  const [stPinErr,setStPinErr]     = useState(false);
+  const [delConf,setDelConf]       = useState(null); // {step:1|2, type, target, display, nameInput, pinInput}
+  const [delErr,setDelErr]         = useState({name:false,pin:false});
+  // Reset modal
+  const [showReset,setShowReset] = useState(false);
+  const [resetPin,setResetPin]   = useState("");
+  const [resetErr,setResetErr]   = useState(false);
+
+  // Auto-save
+  useEffect(()=>{
+    try{
+      localStorage.setItem(STORAGE_KEY,JSON.stringify({tasks,statuses,members}));
+      setSaveLabel("✓ บันทึกแล้ว");
+      const t=setTimeout(()=>setSaveLabel(""),2000);
+      return ()=>clearTimeout(t);
+    }catch{}
+  },[tasks,statuses,members]);
+
+  // Reset page when filter changes
+  useEffect(()=>{setPageNum(1);},[fA,fS,fm,fy,tm,ty,pageSize]);
+
+  // Date range compute
+  const fromD = new Date(fy,fm,1);
+  const toD   = new Date(ty,tm+1,0);
+  const minD  = fromD<=toD?fromD:toD;
+  const maxDR = fromD<=toD?toD:fromD;
+  const maxD  = new Date(maxDR); maxD.setDate(maxD.getDate()+1);
+  const totDays = Math.max(1,Math.ceil((maxD-minD)/864e5));
+  const cellW   = totDays>120?14:totDays>60?22:30;
+
+  const allA = [...new Set(tasks.flatMap(t=>t.assignees||[]))];
+
+  const filteredTasks = tasks.filter(t=>{
+    const s=new Date(t.startDate), e=t.endDate?new Date(t.endDate):maxD;
+    return s<=maxD && e>=minD
+      && (fA==="ทั้งหมด"||(t.assignees||[]).includes(fA))
+      && (fS==="ทั้งหมด"||t.status===fS);
+  });
+
+  const pgSize   = pageSize==="Max"?filteredTasks.length:pageSize;
+  const totPages = Math.max(1,Math.ceil(filteredTasks.length/(pgSize||1)));
+  const safePage = Math.min(pageNum,totPages);
+  const pagedTasks = filteredTasks.slice((safePage-1)*pgSize, safePage*pgSize);
+
+  // Gantt helpers
+  function shiftRange(d){
+    let a=fm+d,b=fy,c=tm+d,e=ty;
+    if(a>11){a=0;b++;}else if(a<0){a=11;b--;}
+    if(c>11){c=0;e++;}else if(c<0){c=11;e--;}
+    setFm(a);setFy(b);setTm(c);setTy(e);
+  }
+  function goNow(){const n=new Date();setFm(n.getMonth());setFy(n.getFullYear());setTm(n.getMonth());setTy(n.getFullYear());}
+  function dOff(ds){return Math.ceil((new Date(ds)-minD)/864e5);}
+  function clamp(task){
+    const s=new Date(task.startDate)<minD?minD:new Date(task.startDate);
+    const e=task.endDate?(new Date(task.endDate)>maxD?maxD:new Date(task.endDate)):maxD;
+    return{off:Math.max(0,Math.ceil((s-minD)/864e5)),w:Math.max(1,Math.ceil((e-s)/864e5))};
+  }
+  // Month headers
+  const mHdrs=[];
+  const cur=new Date(minD);cur.setDate(1);
+  while(cur<=maxD){
+    const mS=new Date(cur),mE=new Date(cur.getFullYear(),cur.getMonth()+1,0);
+    const vs=mS<minD?minD:mS,ve=mE>maxD?maxD:mE;
+    mHdrs.push({label:`${MONTH_L[cur.getMonth()]} ${cur.getFullYear()+543}`,span:Math.ceil((ve-vs)/864e5)+1});
+    cur.setMonth(cur.getMonth()+1);
+  }
+  const dayNs=[];
+  for(let d=0;d<totDays;d++){
+    const dt=new Date(minD);dt.setDate(dt.getDate()+d);
+    dayNs.push({num:dt.getDate(),we:dt.getDay()===0||dt.getDay()===6,tod:dt.toISOString().slice(0,10)===today()});
+  }
+
+  // CRUD tasks
+  function addTask(){
+    if(!nT.name||!nT.startDate)return;
+    setTasks([...tasks,{...nT,id:Date.now(),endDate:nT.hasDeadline?nT.endDate:null,updates:[]}]);
+    setNT({...emptyT,status:statuses[0]||""});
+    setShowAdd(false);
+  }
+  function delTask(id){
+    setTasks(tasks.filter(t=>t.id!==id));
+    if(selTask?.id===id)setSelTask(null);
+  }
+  function saveEdit(){
+    if(!editTask)return;
+    const updated={...editTask,endDate:editTask.hasDeadline?editTask.endDate:null};
+    setTasks(tasks.map(t=>t.id===editTask.id?updated:t));
+    if(selTask?.id===editTask.id)setSelTask(updated);
+    setEditTask(null);
+  }
+  function addUpd(){
+    if(!selTask)return;
+    const u={date:today(),status:updF.status||selTask.status,note:updF.note};
+    setTasks(tasks.map(t=>t.id===selTask.id?{...t,status:u.status,updates:[...t.updates,u]}:t));
+    setSelTask({...selTask,status:u.status,updates:[...selTask.updates,u]});
+    setUpdF({status:"",note:""});setShowUpd(false);
+  }
+
+  // CRUD statuses
+  function addSt(){if(nSt.trim()&&!statuses.includes(nSt.trim())){setStatuses([...statuses,nSt.trim()]);setNSt("");}}
+  function rmSt(s){setStatuses(statuses.filter(x=>x!==s));}
+  function saveSt(){
+    if(!editSt||!editSt.val.trim())return;
+    const nv=editSt.val.trim();
+    if(nv===editSt.old){setEditSt(null);return;}
+    setStatuses(statuses.map(x=>x===editSt.old?nv:x));
+    setTasks(tasks.map(t=>t.status===editSt.old?{...t,status:nv,updates:t.updates.map(u=>u.status===editSt.old?{...u,status:nv}:u)}:t));
+    if(selTask?.status===editSt.old)setSelTask({...selTask,status:nv});
+    if(fS===editSt.old)setFS(nv);
+    setEditSt(null);
+  }
+  function tryStPin(){
+    if(stPinVal===RESET_PIN){
+      if(stPinModal?.action==="edit")setEditSt({old:stPinModal.target,val:stPinModal.target});
+      setStPinModal(null);setStPinVal("");setStPinErr(false);
+    }else{setStPinErr(true);}
+  }
+  function tryConfirmDel(){
+    if(!delConf)return;
+    const nameOk=delConf.nameInput===delConf.display;
+    const pinOk=delConf.type!=="status"||delConf.pinInput===RESET_PIN;
+    setDelErr({name:!nameOk,pin:!pinOk});
+    if(!nameOk||!pinOk)return;
+    if(delConf.type==="task"){delTask(delConf.target);}
+    else if(delConf.type==="member"){
+      setMembers(members.filter(x=>x!==delConf.target));
+      setTasks(tasks.map(t=>({...t,assignees:(t.assignees||[]).filter(a=>a!==delConf.target)})));
+      if(selTask)setSelTask({...selTask,assignees:(selTask.assignees||[]).filter(a=>a!==delConf.target)});
+      if(fA===delConf.target)setFA("ทั้งหมด");
+    }
+    else if(delConf.type==="status"){rmSt(delConf.target);}
+    setDelConf(null);
+  }
+
+  // CRUD members (with rename propagation)
+  function addMb(){if(nMb.trim()&&!members.includes(nMb.trim())){setMembers([...members,nMb.trim()]);setNMb("");}}
+  function rmMb(m){
+    setMembers(members.filter(x=>x!==m));
+    if(fA===m)setFA("ทั้งหมด");
+  }
+  function startEditMb(m){setEditMb({old:m,val:m});}
+  function saveMb(){
+    if(!editMb||!editMb.val.trim())return;
+    const nv=editMb.val.trim();
+    if(nv===editMb.old){setEditMb(null);return;}
+    // rename in members list
+    setMembers(members.map(x=>x===editMb.old?nv:x));
+    // propagate to all tasks (assignees array)
+    setTasks(tasks.map(t=>({...t,assignees:(t.assignees||[]).map(a=>a===editMb.old?nv:a)})));
+    if(selTask)setSelTask({...selTask,assignees:(selTask.assignees||[]).map(a=>a===editMb.old?nv:a)});
+    if(fA===editMb.old)setFA(nv);
+    setEditMb(null);
+  }
+
+  // Export / Import / Reset
+  function exportD(){
+    const blob=new Blob([JSON.stringify({tasks,statuses,members},null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=`task-tracker-${today()}.json`;a.click();
+    URL.revokeObjectURL(url);
+  }
+  function importD(){
+    const inp=document.createElement("input");inp.type="file";inp.accept=".json";
+    inp.onchange=e=>{
+      const f=e.target.files[0];if(!f)return;
+      const r=new FileReader();
+      r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.tasks)setTasks(d.tasks);if(d.statuses)setStatuses(d.statuses);if(d.members)setMembers(d.members);setSelTask(null);alert("นำเข้าข้อมูลสำเร็จ!");}catch{alert("ไฟล์ไม่ถูกต้อง");}};
+      r.readAsText(f);
+    };inp.click();
+  }
+  function tryReset(){
+    if(resetPin===RESET_PIN){
+      localStorage.removeItem(STORAGE_KEY);
+      setTasks([]);setStatuses(INIT_STATUSES);setMembers([]);
+      setSelTask(null);setShowReset(false);setResetPin("");setResetErr(false);
+    }else{setResetErr(true);}
+  }
+
+  // Report data (tasks in date range, all filters off)
+  const inRangeTasks = tasks.filter(t=>{
+    const s=new Date(t.startDate),e=t.endDate?new Date(t.endDate):maxD;
+    return s<=maxD&&e>=minD;
+  });
+
+  const selC = selTask?sc(selTask.status):null;
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="header">
+        <div className="header-top">
+          <div>
+            <h1>📊 ระบบติดตามงาน</h1>
+            <p>Task Tracking & Gantt Chart</p>
+          </div>
+          <div className="header-btns">
+            {saveLabel&&<span style={{fontSize:11,background:"rgba(16,185,129,.25)",padding:"3px 10px",borderRadius:20,color:"#D1FAE5"}}>{saveLabel}</span>}
+            <button className="btn btn-ghost" onClick={exportD}>💾 Export</button>
+            <button className="btn btn-ghost" onClick={importD}>📂 Import</button>
+            <button className="btn btn-ghost" style={{color:"#FCA5A5"}} onClick={()=>{setShowReset(true);setResetPin("");setResetErr(false);}}>🗑 รีเซ็ต</button>
+            <button className="btn btn-ghost" onClick={()=>setShowCfg(!showCfg)}>⚙️ ตั้งค่า</button>
+            <button className="btn btn-green" onClick={()=>{setShowAdd(!showAdd);setEditTask(null);}}>+ เพิ่มงานใหม่</button>
+          </div>
+        </div>
+        <div className="tab-bar">
+          <button className={`tab-btn ${tab==="gantt"?"active":""}`} onClick={()=>setTab("gantt")}>📅 Gantt Chart</button>
+          <button className={`tab-btn ${tab==="report"?"active":""}`} onClick={()=>setTab("report")}>📊 สรุปรายบุคคล</button>
+        </div>
+      </div>
+
+      {/* Reset PIN Modal */}
+      {showReset&&(
+        <div className="modal-bg" onClick={()=>setShowReset(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <h3>🔐 ยืนยันการรีเซ็ต</h3>
+            <p>การรีเซ็ตจะลบข้อมูลทั้งหมด ใส่รหัสเพื่อยืนยัน</p>
+            <input type="password" value={resetPin} onChange={e=>{setResetPin(e.target.value);setResetErr(false);}} onKeyDown={e=>e.key==="Enter"&&tryReset()} placeholder="รหัสผ่าน" style={{borderColor:resetErr?"#EF4444":"#CBD5E1"}} />
+            {resetErr&&<p style={{color:"#EF4444",fontSize:12,marginTop:-8,marginBottom:10}}>รหัสไม่ถูกต้อง</p>}
+            <div className="modal-btns">
+              <button style={{background:"#EF4444",color:"#fff",fontWeight:600}} onClick={tryReset}>รีเซ็ต</button>
+              <button className="btn-gray" onClick={()=>setShowReset(false)}>ยกเลิก</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Edit PIN Modal */}
+      {stPinModal&&(
+        <div className="modal-bg" onClick={()=>{setStPinModal(null);setStPinVal("");setStPinErr(false);}}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <h3>🔐 แก้ไขสถานะ</h3>
+            <p>กรุณาใส่รหัสผ่านเพื่อแก้ไขสถานะ <strong>"{stPinModal.target}"</strong></p>
+            <input type="password" value={stPinVal} onChange={e=>{setStPinVal(e.target.value);setStPinErr(false);}} onKeyDown={e=>e.key==="Enter"&&tryStPin()} placeholder="รหัสผ่าน" style={{borderColor:stPinErr?"#EF4444":"#CBD5E1"}} />
+            {stPinErr&&<p style={{color:"#EF4444",fontSize:12,marginTop:-8,marginBottom:10}}>รหัสไม่ถูกต้อง</p>}
+            <div className="modal-btns">
+              <button style={{background:"#2563EB",color:"#fff",fontWeight:600}} onClick={tryStPin}>ยืนยัน</button>
+              <button className="btn-gray" onClick={()=>{setStPinModal(null);setStPinVal("");setStPinErr(false);}}>ยกเลิก</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation — Step 1: Impact Warning */}
+      {delConf?.step===1&&(
+        <div className="modal-bg" onClick={()=>setDelConf(null)}>
+          <div className="modal" style={{width:400}} onClick={e=>e.stopPropagation()}>
+            <h3>⚠️ แจ้งเตือนก่อนลบ</h3>
+            <p style={{marginBottom:10,lineHeight:1.6}}>{(()=>{
+              const {type,target,display}=delConf;
+              if(type==="task"){const t=tasks.find(x=>x.id===target);const n=t?t.updates.length:0;return`งาน "${display}" และประวัติการอัพเดท ${n} รายการจะถูกลบออกจากระบบอย่างถาวร`;}
+              if(type==="member"){const n=tasks.filter(t=>(t.assignees||[]).includes(target)).length;return`สมาชิก "${display}" จะถูกลบออกจากระบบ และงาน ${n} รายการที่ผูกกับสมาชิกนี้จะไม่มีผู้รับผิดชอบ`;}
+              if(type==="status"){const n=tasks.filter(t=>t.status===target).length;return`สถานะ "${display}" จะถูกลบออกจากระบบ และงาน ${n} รายการที่ใช้สถานะนี้จะไม่มีสถานะที่ถูกต้อง`;}
+              return "";
+            })()}</p>
+            <p style={{fontSize:13,color:"#EF4444",fontWeight:600,marginBottom:16}}>คุณต้องการลบจริงหรือไม่?</p>
+            <div className="modal-btns">
+              <button style={{background:"#EF4444",color:"#fff",fontWeight:600}} onClick={()=>{setDelErr({name:false,pin:false});setDelConf({...delConf,step:2});}}>ต้องการลบ</button>
+              <button className="btn-gray" onClick={()=>setDelConf(null)}>ยกเลิก</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation — Step 2: Type Name (+PIN for status) */}
+      {delConf?.step===2&&(
+        <div className="modal-bg" onClick={()=>setDelConf(null)}>
+          <div className="modal" style={{width:400}} onClick={e=>e.stopPropagation()}>
+            <h3>🗑️ ยืนยันการลบ</h3>
+            <p style={{marginBottom:6}}>กรุณากรอกรายชื่อ{delConf.type==="task"?"งาน":delConf.type==="member"?"สมาชิก":"สถานะ"}ที่ต้องการลบ</p>
+            <p style={{fontSize:12,color:"#64748B",marginBottom:8}}>พิมพ์: <strong style={{color:"#1E293B"}}>{delConf.display}</strong></p>
+            <input value={delConf.nameInput} onChange={e=>{setDelConf({...delConf,nameInput:e.target.value});setDelErr(p=>({...p,name:false}));}} placeholder={delConf.display} style={{borderColor:delErr.name?"#EF4444":"#CBD5E1",letterSpacing:"normal"}} />
+            {delErr.name&&<p style={{color:"#EF4444",fontSize:12,marginTop:-8,marginBottom:8}}>ชื่อไม่ตรงกัน กรุณาพิมพ์ใหม่</p>}
+            {delConf.type==="status"&&(
+              <>
+                <p style={{marginBottom:6}}>กรุณากรอกรหัสผ่านด้วย</p>
+                <input type="password" value={delConf.pinInput} onChange={e=>{setDelConf({...delConf,pinInput:e.target.value});setDelErr(p=>({...p,pin:false}));}} placeholder="รหัสผ่าน" style={{borderColor:delErr.pin?"#EF4444":"#CBD5E1"}} />
+                {delErr.pin&&<p style={{color:"#EF4444",fontSize:12,marginTop:-8,marginBottom:8}}>รหัสไม่ถูกต้อง</p>}
+              </>
+            )}
+            <div className="modal-btns">
+              <button style={{background:"#EF4444",color:"#fff",fontWeight:600}} onClick={tryConfirmDel}>ยืนยันการลบ</button>
+              <button className="btn-gray" onClick={()=>setDelConf(null)}>ยกเลิก</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="container">
+        {/* Settings */}
+        {showCfg&&(
+          <div className="card panel">
+            <div className="grid-2">
+              {/* Statuses */}
+              <div>
+                <h3>⚙️ จัดการสถานะ</h3>
+                <div className="tags" style={{flexDirection:"column",alignItems:"flex-start"}}>
+                  {statuses.map(s=>{const c=sc(s);return(
+                    editSt?.old===s?(
+                      <div key={s} className="member-edit-row" style={{background:c.light,borderColor:c.bg}}>
+                        <input value={editSt.val} onChange={e=>setEditSt({...editSt,val:e.target.value})} onKeyDown={e=>{if(e.key==="Enter")saveSt();if(e.key==="Escape")setEditSt(null);}} autoFocus style={{color:c.text}} />
+                        <button className="btn btn-green" style={{fontSize:11,padding:"3px 8px"}} onClick={saveSt}>✓</button>
+                        <button className="btn btn-gray" style={{fontSize:11,padding:"3px 8px"}} onClick={()=>setEditSt(null)}>✕</button>
+                      </div>
+                    ):(
+                      <span key={s} className="tag" style={{background:c.light,color:c.text}}>
+                        {s}
+                        <button className="tag-edit" title="แก้ไขสถานะ" style={{color:c.text}} onClick={()=>{setStPinModal({action:"edit",target:s});setStPinVal("");setStPinErr(false);}}>✏️</button>
+                        <button className="tag-close" style={{color:c.text}} onClick={()=>{if(statuses.length>1)setDelConf({step:1,type:"status",target:s,display:s,nameInput:"",pinInput:""});}}>×</button>
+                      </span>
+                    )
+                  );})}
+                </div>
+                <div className="input-row">
+                  <input value={nSt} onChange={e=>setNSt(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addSt()} placeholder="ชื่อสถานะใหม่..." />
+                  <button className="btn btn-blue" onClick={addSt}>เพิ่ม</button>
+                </div>
+              </div>
+              {/* Members */}
+              <div>
+                <h3>👥 จัดการสมาชิก</h3>
+                <div className="tags" style={{flexDirection:"column",alignItems:"flex-start"}}>
+                  {members.map(m=>(
+                    editMb?.old===m ? (
+                      <div key={m} className="member-edit-row">
+                        <span className="avatar av-sm" style={{background:av(m)}}>{m[0]}</span>
+                        <input value={editMb.val} onChange={e=>setEditMb({...editMb,val:e.target.value})} onKeyDown={e=>{if(e.key==="Enter")saveMb();if(e.key==="Escape")setEditMb(null);}} autoFocus />
+                        <button className="btn btn-green" style={{fontSize:11,padding:"3px 8px"}} onClick={saveMb}>✓</button>
+                        <button className="btn btn-gray" style={{fontSize:11,padding:"3px 8px"}} onClick={()=>setEditMb(null)}>✕</button>
+                      </div>
+                    ) : (
+                      <span key={m} className="tag" style={{background:"#F1F5F9",color:"#334155"}}>
+                        <span className="avatar av-sm" style={{background:av(m)}}>{m[0]}</span>
+                        {m}
+                        <button className="tag-edit" title="แก้ไขชื่อ" onClick={()=>startEditMb(m)}>✏️</button>
+                        <button className="tag-close" style={{color:"#94A3B8"}} onClick={()=>setDelConf({step:1,type:"member",target:m,display:m,nameInput:"",pinInput:""})}>×</button>
+                      </span>
+                    )
+                  ))}
+                </div>
+                <div className="input-row">
+                  <input value={nMb} onChange={e=>setNMb(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addMb()} placeholder="ชื่อสมาชิกใหม่..." />
+                  <button className="btn btn-blue" onClick={addMb}>เพิ่ม</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add / Edit form */}
+        {(showAdd||editTask)&&(
+          <div className="card panel">
+            <h3>{editTask?"✏️ แก้ไขงาน":"📝 เพิ่มงานใหม่"}</h3>
+            {(()=>{
+              const t=editTask||nT;
+              const set=editTask?(v=>setEditTask({...editTask,...v})):(v=>setNT({...nT,...v}));
+              return(
+                <div className="form-grid">
+                  <div className="full"><label className="form-label">ชื่องาน *</label><input className="form-input" value={t.name} onChange={e=>set({name:e.target.value})} /></div>
+                  <div className="full"><label className="form-label">ลักษณะงาน</label><textarea className="form-input form-textarea" value={t.description} onChange={e=>set({description:e.target.value})} rows={2} /></div>
+                  <div className="full">
+                    <label className="form-label">ผู้รับผิดชอบ <span style={{fontWeight:400,color:"#94A3B8"}}>(เลือกได้หลายคน)</span></label>
+                    {members.length===0?(
+                      <div style={{fontSize:11,color:"#94A3B8",padding:"6px 0"}}>ยังไม่มีสมาชิก — เพิ่มสมาชิกในหน้าตั้งค่าก่อน</div>
+                    ):(
+                      <div style={{display:"flex",flexWrap:"wrap",gap:6,padding:"6px 0"}}>
+                        {members.map(m=>{
+                          const sel=(t.assignees||[]).includes(m);
+                          return(
+                            <span key={m} onClick={()=>{const cur=t.assignees||[];set({assignees:sel?cur.filter(x=>x!==m):[...cur,m]});}}
+                              style={{display:"inline-flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:20,fontSize:12,cursor:"pointer",userSelect:"none",
+                                background:sel?av(m):"#F1F5F9",color:sel?"#fff":"#475569",
+                                border:sel?`2px solid ${av(m)}`:"1px solid #E2E8F0",fontWeight:sel?600:400,transition:"all .12s"}}>
+                              <span style={{width:16,height:16,borderRadius:"50%",background:sel?"rgba(255,255,255,.35)":av(m),display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff",fontWeight:600}}>{m[0]}</span>
+                              {m}
+                              {sel&&<span style={{fontSize:10,marginLeft:1}}>✓</span>}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="form-label">สถานะ</label>
+                    <select className="form-input" value={t.status} onChange={e=>set({status:e.target.value})}>
+                      {statuses.map(s=><option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div><label className="form-label">วันเริ่มต้น *</label><input type="date" className="form-input" value={t.startDate} onChange={e=>set({startDate:e.target.value})} /></div>
+                  <div>
+                    <label className="form-label">วันสิ้นสุด <label className="checkbox-lbl"><input type="checkbox" checked={t.hasDeadline} onChange={e=>set({hasDeadline:e.target.checked})} /> มีกำหนด</label></label>
+                    <input type="date" className="form-input" value={t.endDate||""} disabled={!t.hasDeadline} onChange={e=>set({endDate:e.target.value})} />
+                  </div>
+                  <div className="full" style={{display:"flex",gap:8}}>
+                    <button className="btn btn-green" style={{flex:1}} onClick={editTask?saveEdit:addTask}>✓ {editTask?"บันทึกการแก้ไข":"บันทึกงาน"}</button>
+                    <button className="btn btn-gray" onClick={()=>{setShowAdd(false);setEditTask(null);}}>ยกเลิก</button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* ====== TAB: GANTT ====== */}
+        {tab==="gantt"&&(
+          <>
+            {/* Filter bar */}
+            <div className="card filter-bar">
+              <span className="lbl">🔍 ตัวกรอง</span>
+              <div style={{display:"flex",alignItems:"center",gap:5}}>
+                <span style={{fontSize:12,color:"#64748B"}}>ผู้รับผิดชอบ:</span>
+                <select value={fA} onChange={e=>setFA(e.target.value)}>
+                  <option value="ทั้งหมด">ทั้งหมด</option>
+                  {allA.map(a=><option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}>
+                <span style={{fontSize:12,color:"#64748B"}}>สถานะ:</span>
+                <select value={fS} onChange={e=>setFS(e.target.value)}>
+                  <option value="ทั้งหมด">ทั้งหมด</option>
+                  {statuses.map(s=><option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              {(fA!=="ทั้งหมด"||fS!=="ทั้งหมด")&&<button className="btn btn-red" style={{fontSize:11,padding:"4px 9px"}} onClick={()=>{setFA("ทั้งหมด");setFS("ทั้งหมด");}}>✕ ล้าง</button>}
+              <span className="count">แสดง {filteredTasks.length} จาก {tasks.length} งาน</span>
+            </div>
+
+            {/* Summary */}
+            <div className="summary">
+              <div className="sum-card" style={{borderLeft:"4px solid #2563EB"}}>
+                <div className="lbl">งานทั้งหมด</div>
+                <div className="num" style={{color:"#2563EB"}}>{tasks.length}</div>
+              </div>
+              <div className="sum-card" style={{borderLeft:"4px solid #F59E0B"}}>
+                <div className="lbl">กำลังดำเนินการ</div>
+                <div className="num" style={{color:"#F59E0B"}}>{tasks.filter(t=>t.status==="อยู่ระหว่างดำเนินการ").length}</div>
+              </div>
+              <div className="sum-card" style={{borderLeft:"4px solid #10B981"}}>
+                <div className="lbl">เสร็จสิ้น</div>
+                <div className="num" style={{color:"#10B981"}}>{tasks.filter(t=>t.status==="ดำเนินการเสร็จสิ้น").length}</div>
+              </div>
+            </div>
+
+            <div className={`main-grid ${selTask?"with-d":"no-d"}`}>
+              {/* Gantt card */}
+              <div className="card">
+                <div className="gantt-hdr">
+                  <h2>📅 Gantt Chart</h2>
+                  <div className="time-sel">
+                    <button className="nav-btn" onClick={()=>shiftRange(-1)}>◀</button>
+                    <div className="time-grp">
+                      <span>จาก</span>
+                      <select value={fm} onChange={e=>setFm(+e.target.value)}>{MONTH_S.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                      <select value={fy} onChange={e=>setFy(+e.target.value)}>{[2024,2025,2026,2027,2028,2029,2030].map(y=><option key={y} value={y}>{y+543}</option>)}</select>
+                    </div>
+                    <span className="arr-sep">→</span>
+                    <div className="time-grp">
+                      <span>ถึง</span>
+                      <select value={tm} onChange={e=>setTm(+e.target.value)}>{MONTH_S.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                      <select value={ty} onChange={e=>setTy(+e.target.value)}>{[2024,2025,2026,2027,2028,2029,2030].map(y=><option key={y} value={y}>{y+543}</option>)}</select>
+                    </div>
+                    <button className="nav-btn" onClick={()=>shiftRange(1)}>▶</button>
+                    <div style={{width:1,height:22,background:"#E2E8F0",margin:"0 2px"}}/>
+                    <button className="btn btn-blue" style={{fontSize:11,padding:"4px 10px"}} onClick={goNow}>เดือนนี้</button>
+                  </div>
+                </div>
+
+                <div className="gantt-scroll">
+                  <div style={{minWidth:300+totDays*cellW}}>
+                    {/* Month header */}
+                    <div className="g-month-row">
+                      <div className="g-name-hdr">ชื่องาน</div>
+                      <div style={{display:"flex"}}>
+                        {mHdrs.map((m,i)=>(
+                          <div key={i} className="month-cell" style={{width:m.span*cellW,borderLeft:i>0?"1px solid #E2E8F0":"none"}}>{m.label}</div>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Day header */}
+                    {totDays<=93&&(
+                      <div className="g-day-row">
+                        <div style={{width:300,minWidth:300,background:"#FAFBFC"}}/>
+                        <div style={{display:"flex"}}>
+                          {dayNs.map((d,i)=>(
+                            <div key={i} className={`day-cell ${d.we?"day-we":""} ${d.tod?"day-td":""}`} style={{width:cellW}}>{d.num}</div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {/* Rows */}
+                    {filteredTasks.length===0?(
+                      <div className="empty-state"><div className="icon">📭</div><div>ไม่มีงานในช่วงเวลานี้</div></div>
+                    ):pagedTasks.map(task=>{
+                      const {off,w}=clamp(task);
+                      const c=sc(task.status);
+                      const isSel=selTask?.id===task.id;
+                      return(
+                        <div key={task.id} className={`g-task-row ${isSel?"sel":""}`} onClick={()=>setSelTask(isSel?null:task)}>
+                          <div className="g-name-col">
+                            <div className="task-dot" style={{background:c.bg}}/>
+                            <div className="task-info">
+                              <div className="task-nm">{task.name}</div>
+                              <div className="task-dt">{fmt(task.startDate)} — {task.hasDeadline?fmt(task.endDate):"ไม่มีกำหนด"}</div>
+                            </div>
+                            {(task.assignees||[]).length>0&&(
+                              <div style={{display:"flex",alignItems:"center",flexShrink:0}}>
+                                {(task.assignees||[]).slice(0,3).map((a,i)=>(
+                                  <span key={a} className="avatar" style={{background:av(a),marginLeft:i>0?-7:0,border:"2px solid #fff",zIndex:3-i,position:"relative"}} title={a}>{a[0]}</span>
+                                ))}
+                                {(task.assignees||[]).length>3&&<span style={{fontSize:10,color:"#64748B",marginLeft:4}}>+{(task.assignees||[]).length-3}</span>}
+                              </div>
+                            )}
+                          </div>
+                          <div className="g-bar-area">
+                            {Array.from({length:Math.floor(totDays/7)}).map((_,i)=>(
+                              <div key={i} className="grid-ln" style={{left:i*7*cellW}}/>
+                            ))}
+                            {(()=>{const tO=dOff(today());return tO>=0&&tO<=totDays?<div className="today-ln" style={{left:tO*cellW}}/>:null;})()}
+                            <div className={`g-bar ${!task.hasDeadline?"no-dl":""}`} style={{left:off*cellW,width:w*cellW,background:`linear-gradient(90deg,${c.bg},${c.bg}dd)`}}>
+                              {w*cellW>80?task.name:""}
+                              {!task.hasDeadline&&<span style={{marginLeft:"auto",paddingRight:4,fontSize:12}}>→</span>}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Pagination */}
+                {filteredTasks.length>0&&(
+                  <div className="gantt-pg">
+                    <span>แสดง:</span>
+                    {PAGE_OPTS.map(p=>(
+                      <button key={p} className={`pg-btn ${pageSize===p?"active":""}`} onClick={()=>{setPageSize(p);setPageNum(1);}}>
+                        {p==="Max"?"Max":p}
+                      </button>
+                    ))}
+                    <div style={{width:1,height:18,background:"#E2E8F0",margin:"0 4px"}}/>
+                    {pageSize!=="Max"&&(
+                      <>
+                        <button className="pg-nav" disabled={safePage<=1} onClick={()=>setPageNum(safePage-1)}>◀</button>
+                        <span style={{fontSize:12,color:"#475569"}}>{safePage} / {totPages}</span>
+                        <button className="pg-nav" disabled={safePage>=totPages} onClick={()=>setPageNum(safePage+1)}>▶</button>
+                      </>
+                    )}
+                    <span style={{marginLeft:"auto",fontSize:11,color:"#94A3B8"}}>รวม {filteredTasks.length} รายการ</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Detail panel */}
+              {selTask&&(
+                <div className="card dp">
+                  <div className="dp-hdr">
+                    <h3 style={{fontSize:14,fontWeight:600}}>📋 รายละเอียด</h3>
+                    <div style={{display:"flex",gap:5}}>
+                      <button className="btn btn-yellow" style={{fontSize:11,padding:"3px 7px"}} onClick={()=>setEditTask({...selTask})}>✏️</button>
+                      <button className="btn btn-red" style={{fontSize:11,padding:"3px 7px"}} onClick={()=>setDelConf({step:1,type:"task",target:selTask.id,display:selTask.name,nameInput:"",pinInput:""})}>🗑️</button>
+                      <button style={{background:"none",border:"none",fontSize:17,color:"#94A3B8",cursor:"pointer"}} onClick={()=>setSelTask(null)}>×</button>
+                    </div>
+                  </div>
+                  <div className="dp-body">
+                    <div className="dp-title">{selTask.name}</div>
+                    <div className="dp-desc">{selTask.description||"ไม่มีรายละเอียด"}</div>
+                    {(selTask.assignees||[]).length>0&&(
+                      <div style={{marginBottom:12}}>
+                        <div style={{fontSize:10,color:"#94A3B8",marginBottom:6}}>ผู้รับผิดชอบ</div>
+                        <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                          {(selTask.assignees||[]).map(a=>(
+                            <div key={a} className="dp-assignee" style={{marginBottom:0}}>
+                              <span className="avatar av-lg" style={{background:av(a)}}>{a[0]}</span>
+                              <div style={{fontSize:12,fontWeight:500}}>{a}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="dp-dates">
+                      <div className="dp-date-box"><div className="lbl">เริ่มต้น</div><div className="val">{fmt(selTask.startDate)}</div></div>
+                      <div className="dp-date-box"><div className="lbl">สิ้นสุด</div><div className="val">{selTask.hasDeadline?fmt(selTask.endDate):"ไม่มีกำหนด"}</div></div>
+                    </div>
+                    <div style={{marginBottom:12}}><span className="s-badge" style={{background:selC.light,color:selC.text}}>{selTask.status}</span></div>
+                    <button className="btn btn-blue" style={{width:"100%",marginBottom:12}} onClick={()=>{setUpdF({status:selTask.status,note:""});setShowUpd(true);}}>+ อัพเดทสถานะ</button>
+                    {showUpd&&(
+                      <div className="upd-form">
+                        <div className="ttl">อัพเดทสถานะ</div>
+                        <select className="form-input" value={updF.status} onChange={e=>setUpdF({...updF,status:e.target.value})} style={{marginBottom:7}}>
+                          {statuses.map(s=><option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <textarea className="form-input form-textarea" value={updF.note} onChange={e=>setUpdF({...updF,note:e.target.value})} placeholder="หมายเหตุ..." rows={2}/>
+                        <div className="upd-btns">
+                          <button className="btn-green" onClick={addUpd}>บันทึก</button>
+                          <button className="btn-gray" onClick={()=>setShowUpd(false)}>ยกเลิก</button>
+                        </div>
+                      </div>
+                    )}
+                    <div className="hist-tog" onClick={()=>setExpHist({...expHist,[selTask.id]:!expHist[selTask.id]})}>
+                      <span>📜 ประวัติการอัพเดท ({selTask.updates.length})</span>
+                      <span className={`hist-arr ${expHist[selTask.id]?"open":""}`}>▼</span>
+                    </div>
+                    {expHist[selTask.id]&&(
+                      <div className="timeline">
+                        {selTask.updates.length===0?(
+                          <p style={{fontSize:11,color:"#94A3B8",fontStyle:"italic",padding:"7px 0"}}>ยังไม่มีประวัติ</p>
+                        ):selTask.updates.slice().reverse().map((u,i)=>{
+                          const uc=sc(u.status);
+                          return(
+                            <div key={i} className="tl-item">
+                              <div className="tl-dot" style={{background:uc.bg}}/>
+                              <div className="tl-date">{fmt(u.date)}</div>
+                              <span className="s-badge" style={{background:uc.light,color:uc.text,fontSize:10,padding:"2px 7px"}}>{u.status}</span>
+                              {u.note&&<div className="tl-note">{u.note}</div>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ====== TAB: REPORT ====== */}
+        {tab==="report"&&(
+          <>
+            <div style={{marginBottom:14,display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+              <span style={{fontSize:13,fontWeight:600,color:"#475569"}}>📊 สรุปรายบุคคล</span>
+              <span style={{fontSize:12,color:"#94A3B8"}}>
+                ช่วงเวลา: {MONTH_L[fm]} {fy+543} → {MONTH_L[tm]} {ty+543}
+              </span>
+              <span style={{fontSize:11,color:"#64748B",marginLeft:"auto"}}>งานในช่วงเวลานี้ทั้งหมด {inRangeTasks.length} รายการ</span>
+            </div>
+            {members.length===0?(
+              <div className="card empty-state"><div className="icon">👥</div><div>ยังไม่มีสมาชิก กรุณาเพิ่มสมาชิกในหน้าตั้งค่า</div></div>
+            ):(
+              <div className="report-grid">
+                {members.map(mb=>{
+                  const myTasks = inRangeTasks.filter(t=>(t.assignees||[]).includes(mb));
+                  const total = myTasks.length;
+                  const byStatus = {};
+                  statuses.forEach(s=>{byStatus[s]=myTasks.filter(t=>t.status===s).length;});
+                  const maxN = Math.max(1,total);
+                  return(
+                    <div key={mb} className="rep-card">
+                      <div className="head">
+                        <span className="avatar av-lg" style={{background:av(mb)}}>{mb[0]}</span>
+                        <div>
+                          <div className="name">{mb}</div>
+                          <div style={{fontSize:11,color:"#94A3B8"}}>{total} งาน</div>
+                        </div>
+                      </div>
+                      <div className="rep-bars">
+                        {statuses.map(s=>{
+                          const c=sc(s);const n=byStatus[s]||0;
+                          return(
+                            <div key={s} className="rep-row">
+                              <div className="lbl">{s}</div>
+                              <div className="bar-track">
+                                <div className="bar-fill" style={{width:`${(n/maxN)*100}%`,background:c.bg}}/>
+                              </div>
+                              <div className="cnt" style={{color:c.text}}>{n}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="rep-total">รวม {total} งานในช่วงเวลานี้</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("app")).render(<App/>);
+</script>
+</body>
+</html>
